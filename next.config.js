@@ -2,6 +2,11 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
-}
 
-module.exports = nextConfig
+  devIndicators: {
+    // autoPrerender: false,
+    buildActivity: false,
+  },
+};
+
+module.exports = nextConfig;

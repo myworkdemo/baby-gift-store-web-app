@@ -1,0 +1,66 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// modules
+
+model User {
+  userId       Int       @id @default(autoincrement())
+  userName     String
+  userEmailId  String
+  userPassword String
+  userRole     String
+  isActive     Boolean   @default(true)
+  createdDate  DateTime?
+  profilePhoto String?
+}
+
+model ProductType {
+  productTypeId   Int    @id @default(autoincrement())
+  productTypeName String
+}
+
+model ProductStock {
+  productStockId   Int      @id @default(autoincrement())
+  category         String
+  productSuplier   String
+  productName      String
+  productQty       Int
+  totalCost        Int
+  costPerUnit      Int
+  purchaseDate     DateTime
+  productTypeId_fk Int
+}
+
+model SaleProduct {
+  saleProductId      Int      @id @default(autoincrement())
+  category           String
+  productName        String
+  productQty         Int
+  totalCost          Int
+  costPerUnit        Int
+  saleDate           DateTime
+  saleTime           String
+  productTypeId_fk   Int
+  productType        String
+  productPrice       Int
+  discountPercentage Int
+  discountPrice      Int
+
+  customerDetailsId_fk Int
+}
+
+model CustomerDetails {
+  customerDetailsId Int    @id @default(autoincrement())
+  customerName      String
+  customerAddress   String
+  customerMobileNo  String
+}

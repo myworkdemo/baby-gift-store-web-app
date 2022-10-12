@@ -1,7 +1,13 @@
-import '../styles/globals.css'
+import "../styles/globals.css";
 
-function MyApp({ Component, pageProps }) {
-  return <Component {...pageProps} />
+function BabyGiftStore({ Component, pageProps }) {
+  const Layout = Component.Layout || ((page) => page.children);
+
+  return (
+    <Layout>
+      <Component {...pageProps} />
+    </Layout>
+  );
 }
 
-export default MyApp
+export default BabyGiftStore;

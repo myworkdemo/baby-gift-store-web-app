@@ -1,0 +1,59 @@
+[
+  {
+    "title": "Product Stock",
+    "icon": "fas fa-plus-circle",
+    "type": "parent",
+    "childrens": [
+      {
+        "title": "Add Stock",
+        "icon": "fa fa-regular fa-cart-arrow-down",
+        "path": "/stocks/addStock",
+        "type": "child"
+      },
+      {
+        "title": "All Records",
+        "icon": "fa fa-regular fa-list",
+        "path": "/sales/sale",
+        "type": "child"
+      },
+      {
+        "title": "FAQ",
+        "icon": "fa fa-home-alt",
+        "type": "child"
+      }
+    ]
+  },
+  {
+    "title": "Sale",
+    "icon": "fas fa-plus-circle",
+    "type": "parent",
+    "childrens": [
+      {
+        "title": "Add Sale",
+        "path": "/sales/addSale",
+        "type": "child"
+      },
+      {
+        "title": "All Records",
+        "path": "/sales/allRecords",
+        "type": "child"
+      },
+      {
+        "title": "Forgot Password",
+        "path": "/forgot-password",
+        "type": "child"
+      },
+      {
+        "title": "Reset Password",
+        "path": "/reset-password",
+        "type": "child"
+      }
+    ]
+  },
+  {
+    "title": "Master",
+    "icon": "fas fa-plus-circle",
+    "path": "/masters/addMaster",
+    "type": "parent"
+  }
+]

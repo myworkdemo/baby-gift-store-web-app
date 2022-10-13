@@ -8,12 +8,13 @@ import { useForm } from "react-hook-form";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-interface UserFormData {
+interface SaleProduct {
   saleProductId: number;
   category: string;
   productName: string;
   productQty: number;
   totalCost: number;
+  netCost: number;
   costPerUnit: number;
   saleDate: Date;
   saleTime: string;
@@ -21,14 +22,24 @@ interface UserFormData {
   productType: string;
   productPrice: number;
   discount: number;
+  totalDiscount: number;
   discountPercentage: number;
   discountPrice: number;
 
+  // customerDetailsId: number;
+  // customerName: string;
+  // customerAddress: string;
+  // customerMobileNo: string;
+}
+
+interface CustomerDetails {
   customerDetailsId: number;
   customerName: string;
   customerAddress: string;
   customerMobileNo: string;
 }
+
+interface FormData extends SaleProduct, CustomerDetails {}
 
 // const prisma = new PrismaClient();
 
@@ -41,7 +52,7 @@ const AddSale = () => {
     getValues,
     resetField,
     watch,
-  } = useForm<UserFormData>({
+  } = useForm<FormData>({
     defaultValues: {
       costPerUnit: 0,
     },
@@ -103,12 +114,12 @@ const AddSale = () => {
   const [showAutocomplete, setShowAutocomplete] = useState(false);
 
   const [productTypeList, setProductTypeList] = useState([]);
-  const [userForm, setUserForm] = useState<UserFormData>();
+  const [userForm, setUserForm] = useState<FormData>();
   const [msg, setMsg] = useState("");
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const [productTypeId, setProductTypeId] = useState(0);
+  const [saleProductId, setSaleProductId] = useState(0);
   const [discountType, setDiscountType] = useState(true);
 
   const [isExistingCustomer, setIsExistingCustomer] = useState(false);
@@ -121,7 +132,7 @@ const AddSale = () => {
     custDrawer: true,
   });
 
-  const onSubmit = handleSubmit(async (data: UserFormData) => {
+  const onSubmit = handleSubmit(async (data: FormData) => {
     try {
       await create(data);
       await getSaleProductList();
@@ -133,20 +144,67 @@ const AddSale = () => {
     }
   });
 
-  const handleSubmit2 = async (data: UserFormData) => {
+  const handleSubmit2 = async (data: FormData) => {
     console.log("## handleSubmit() : ");
-    try {
-      await create(data);
-      await getSaleProductList();
 
-      setMsg("Product Type saved successfully!");
-    } catch (error) {
-      console.log(error);
-      setMsg("Couldn't save Product Type");
+    if (isEditOpretion) {
+      await update(data);
+    } else {
+      await create(data);
     }
+
+    await getSaleProductList();
+    await getExistingCustomerList();
   };
 
-  async function create(data: UserFormData) {
+  async function update(data: FormData) {
+    try {
+      console.log("##update() : ", data);
+      const saleResp = await updateSaleProduct(data);
+      const custResp = await updateCustomerDetails(data);
+      // await getSaleProductList();
+      // if (saleResp) {
+      //   console.log("##update() : ", data);
+      //   await updateCustomerDetails(data);
+      // }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  const updateSaleProduct = async (data: SaleProduct) => {
+    try {
+      console.log("##updateSaleProduct() : ", data);
+      const saleResp = await fetch("/api/sale", {
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+        method: "PUT",
+      });
+      setMsg("Sale Product saved successfully!");
+      return saleResp;
+    } catch (error) {
+      console.log(error);
+    }
+    return null;
+  };
+
+  const updateCustomerDetails = async (data: CustomerDetails) => {
+    try {
+      console.log("##updateCustomerDetails() : ", data);
+      const customerResp = await fetch("/api/customer", {
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+        method: "PUT",
+      });
+      setMsg("Customer Details saved successfully!");
+      return customerResp;
+    } catch (error) {
+      console.log(error);
+    }
+    return null;
+  };
+
+  async function create(data: FormData) {
     try {
       await fetch("/api/sale", {
         body: JSON.stringify(data),
@@ -160,13 +218,20 @@ const AddSale = () => {
   }
 
   const getSaleProductList = async () => {
+    if (saleProductList.length > 0) {
+      setSaleProductList([]);
+    }
+
     try {
+      console.log("##getSaleProductList() : ");
       const response = await fetch("/api/sale", {
         method: "GET",
       });
       const resp = await response.json();
+
       setSaleProductList(resp);
 
+      console.log("##getSaleProductList() : ", resp);
       console.log("##getSaleProductList() : ", saleProductList);
     } catch (error) {
       console.log(error);
@@ -227,11 +292,11 @@ const AddSale = () => {
     console.log("##useEffect() : ", customerList);
   }, []);
 
-  const deleteRecord = async (productTypeId) => {
-    alert("deleteRecord() : " + productTypeId);
+  const deleteRecord = async (saleProductId) => {
+    // alert("deleteRecord() : " + saleProductId);
     try {
       const response = await fetch(
-        `/api/stock?productTypeId=${productTypeId}`,
+        `/api/sale?saleProductId=${saleProductId}`,
         {
           headers: { "Content-Type": "application/json" },
           method: "DELETE",
@@ -243,11 +308,11 @@ const AddSale = () => {
       console.log(error);
     }
     setIsDialogOpen(false);
-    setProductTypeId(0);
+    setSaleProductId(0);
   };
 
-  const confirmToDelete = (productTypeId) => {
-    setProductTypeId(productTypeId);
+  const confirmToDelete = (saleProductId) => {
+    setSaleProductId(saleProductId);
     setIsDialogOpen(true);
   };
 
@@ -268,7 +333,7 @@ const AddSale = () => {
     setAutocompleteList(filtered);
   };
 
-  const getProductTypeById = async (productTypeId_fk) => {
+  const getProductTypeById = async (productTypeId_fk: number) => {
     try {
       const response = await fetch(
         `/api/masters?productTypeId=${productTypeId_fk}`,
@@ -342,10 +407,20 @@ const AddSale = () => {
       setValue("discountPercentage", percentage);
     }
 
-    const totalCost =
-      productQty * productPrice -
-      (getValues("discountPrice") ? getValues("discountPrice") : 0);
+    const totalCost = productQty * productPrice;
     setValue("totalCost", totalCost);
+
+    const netCost =
+      productQty * productPrice -
+      (getValues("discountPrice")
+        ? getValues("discountPrice") * productQty
+        : 0);
+    setValue("netCost", netCost);
+
+    const totalDiscount =
+      productQty *
+      (getValues("discountPrice") ? getValues("discountPrice") : 0);
+    setValue("totalDiscount", totalDiscount);
 
     if (productQty === 0) {
       setValue("discountPercentage", 0);
@@ -431,7 +506,9 @@ const AddSale = () => {
   };
 
   const findExistingCustomer = async (customerName: string) => {
-    const customers = await customerList.filter((entry) =>
+    // alert(customerName)
+    console.log("findExistingCustomer : ", customerName);
+    const customers = customerList.filter((entry) =>
       Object.values(entry).some(
         (val) =>
           typeof val === "string" &&
@@ -449,30 +526,24 @@ const AddSale = () => {
     if (data.customerName && data.customerAddress && data.customerMobileNo) {
       setShowCustomerList(false);
     }
-    // console.log("handleSelectCustomer()  : ", showCustomerList);
+    console.log("handleSelectCustomer()  : ", showCustomerList);
   };
 
   useEffect(() => {
-    
-    if (isExistingCustomer && customerName) {
+    if (isExistingCustomer && showCustomerList && customerName) {
       findExistingCustomer(customerName);
     } else {
       setFilteredCustomerList([]);
     }
-  }, [customerName]);
-
-  useEffect(() => {
-    setShowCustomerList(isExistingCustomer);
-
-    if (isExistingCustomer && customerName) {
-      findExistingCustomer(customerName);
-    } else {
-      setFilteredCustomerList([]);
-    }
-  }, [isExistingCustomer]);
+  }, [isExistingCustomer, showCustomerList, customerName]);
 
   return (
-    <section onClick={() => setShowAutocomplete(false)}>
+    <section
+      onClick={() => {
+        setShowAutocomplete(false);
+        setShowCustomerList(false);
+      }}
+    >
       <MainCard title={`${isEditOpretion ? "Edit" : "Add"} Sale`}>
         <form onSubmit={handleSubmit(handleSubmit2)}>
           <div className="drawer-container">
@@ -541,6 +612,7 @@ const AddSale = () => {
                       id="productType"
                       name="productType"
                       placeholder="please enter product type"
+                      className="input-box-read-only"
                       {...register("productType")}
                       required
                       readOnly
@@ -554,21 +626,8 @@ const AddSale = () => {
                       id="productCategory"
                       name="productCategory"
                       placeholder="please enter product category"
+                      className="input-box-read-only"
                       {...register("category")}
-                      required
-                      readOnly
-                    />
-                  </div>
-
-                  <div className="input-box">
-                    <label htmlFor="productPrice">Product Price</label>
-                    <input
-                      type="text"
-                      id="productPrice"
-                      name="productPrice"
-                      placeholder="please enter product price"
-                      {...register("productPrice", { valueAsNumber: true })}
-                      min={0}
                       required
                       readOnly
                     />
@@ -577,6 +636,21 @@ const AddSale = () => {
                 {/* form-row end */}
 
                 <div className="form-row">
+                  <div className="input-box">
+                    <label htmlFor="productPrice">Product Price</label>
+                    <input
+                      type="text"
+                      id="productPrice"
+                      name="productPrice"
+                      placeholder="please enter product price"
+                      className="input-box-read-only"
+                      {...register("productPrice", { valueAsNumber: true })}
+                      min={0}
+                      required
+                      readOnly
+                    />
+                  </div>
+
                   <div className="input-box">
                     <label htmlFor="productQty">Product Quantity</label>
                     <input
@@ -603,7 +677,13 @@ const AddSale = () => {
                         // calculateTotalCost();
                       }}
                     >
-                      Discount {discountType ? "(%)" : "(RS)"}
+                      Discount{" "}
+                      {discountType ? (
+                        <label className="discount-type">(in %)</label>
+                      ) : (
+                        <label className="discount-type">(in RS)</label>
+                      )}{" "}
+                      <label style={{ fontSize: "11px" }}>(per unit)</label>
                     </label>
                     <input
                       type="number"
@@ -634,7 +714,13 @@ const AddSale = () => {
                       htmlFor="discount"
                       onClick={() => setDiscountType(!discountType)}
                     >
-                      Discount {discountType ? "(RS)" : "(%)"}
+                      Discount{" "}
+                      {discountType ? (
+                        <label className="discount-type">(in RS)</label>
+                      ) : (
+                        <label className="discount-type">(in %)</label>
+                      )}{" "}
+                      <label style={{ fontSize: "11px" }}> (per unit)</label>
                     </label>
                     <input
                       type="number"
@@ -649,11 +735,14 @@ const AddSale = () => {
                         !discountType ? discountPercentage : discountPrice ?? ""
                       }
                       min={0}
+                      className="input-box-read-only"
                       required
                       readOnly
                     />
                   </div>
+                </div>
 
+                <div className="form-row">
                   <div className="input-box">
                     <label htmlFor="totalCost">Total Cost</label>
                     <input
@@ -661,9 +750,41 @@ const AddSale = () => {
                       id="totalCost"
                       name="totalCost"
                       placeholder="please enter total cost"
+                      className="input-box-read-only"
                       {...register("totalCost", { valueAsNumber: true })}
                       min={0}
                       required
+                      readOnly
+                    />
+                  </div>
+
+                  <div className="input-box">
+                    <label htmlFor="totalDiscount">Total Discount (RS)</label>
+                    <input
+                      type="number"
+                      id="totalDiscount"
+                      name="totalDiscount"
+                      placeholder="please enter total discount"
+                      className="input-box-read-only"
+                      {...register("totalDiscount", { valueAsNumber: true })}
+                      min={0}
+                      required
+                      readOnly
+                    />
+                  </div>
+
+                  <div className="input-box">
+                    <label htmlFor="netCost">Net Cost</label>
+                    <input
+                      type="number"
+                      id="netCost"
+                      name="netCost"
+                      placeholder="please enter net cost"
+                      className="input-box-read-only"
+                      {...register("netCost", { valueAsNumber: true })}
+                      min={0}
+                      required
+                      readOnly
                     />
                   </div>
                 </div>
@@ -698,7 +819,7 @@ const AddSale = () => {
                 <div className="form-row">
                   <div
                     className="input-box"
-                    style={{ width: "170px", height: "55px" }}
+                    style={{ width: "15%", height: "56px" }}
                   >
                     <label htmlFor="isExistingCustomer">
                       Is Existing Customer
@@ -708,9 +829,10 @@ const AddSale = () => {
                       id="isExistingCustomer"
                       name="isExistingCustomer"
                       checked={isExistingCustomer}
-                      onChange={() =>
-                        setIsExistingCustomer(!isExistingCustomer)
-                      }
+                      onChange={() => {
+                        setIsExistingCustomer(!isExistingCustomer);
+                        setShowCustomerList(true);
+                      }}
                     />
                   </div>
 
@@ -723,6 +845,7 @@ const AddSale = () => {
                       placeholder="please enter customer name"
                       onChange={(e) => {
                         setValue("customerName", e.target.value);
+                        setShowCustomerList(true);
                       }}
                       value={customerName}
                       autoComplete="off"
@@ -819,7 +942,7 @@ const AddSale = () => {
         <CunformationDialogBox
           show={isDialogOpen}
           close={() => setIsDialogOpen(false)}
-          deleteRecord={() => deleteRecord(productTypeId)}
+          deleteRecord={() => deleteRecord(saleProductId)}
         />
       </MainCard>
     </section>

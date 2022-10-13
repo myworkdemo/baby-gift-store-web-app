@@ -115,6 +115,50 @@ const saveRecord = async (req: ExtendedNextApiRequest, res) => {
 
 const updateRecord = async (req, res) => {
   console.log("updateRecord");
+
+  let addStock = req.body;
+  const { customerDetailsId, customerName, customerAddress, customerMobileNo } =
+    req.body;
+
+  try {
+    const customerDetailsData = await prisma.customerDetails.update({
+      where: {
+        customerDetailsId: customerDetailsId,
+      },
+      data: {
+        customerDetailsId,
+        customerName,
+        customerAddress,
+        customerMobileNo,
+      },
+    });
+
+    if (customerDetailsData) {
+      const customerDetailsId_fk = customerDetailsData.customerDetailsId;
+
+      // await prisma.saleProduct.create({
+      //   data: {
+      //     category,
+      //     productName,
+      //     productQty,
+      //     totalCost,
+      //     costPerUnit,
+      //     saleDate,
+      //     saleTime,
+      //     productTypeId_fk,
+      //     productType,
+      //     productPrice,
+      //     discountPercentage,
+      //     discountPrice,
+      //     customerDetailsId_fk,
+      //   },
+      // });
+    }
+
+    res.status(200).json({ message: "Sale record successfully updated" });
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 const getRecord = async (req, res) => {

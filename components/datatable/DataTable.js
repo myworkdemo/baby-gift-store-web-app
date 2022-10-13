@@ -149,8 +149,8 @@ const DataTable = ({ headers, records, deleteRecord, editRecord }) => {
             className="rows-per-page"
             onChange={(e) => setPageSize(e.target.value)}
           >
-            {rowsPerPagesList.map((value) => (
-              <option value={value}>{value}</option>
+            {rowsPerPagesList.map((value, idx) => (
+              <option value={value} key={idx}>{value}</option>
             ))}
           </select>
         </div>

@@ -115,6 +115,52 @@ const saveRecord = async (req: ExtendedNextApiRequest, res) => {
 
 const updateRecord = async (req, res) => {
   console.log("updateRecord");
+
+  let addStock = req.body;
+  const {
+    saleProductId,
+    category,
+    productName,
+    productQty,
+    totalCost,
+    costPerUnit,
+    saleDate,
+    saleTime,
+    productTypeId_fk,
+    productType,
+    productPrice,
+    discountPercentage,
+    discountPrice,
+    customerDetailsId_fk,
+  } = req.body;
+
+  try {
+    await prisma.saleProduct.update({
+      where: {
+        saleProductId: saleProductId,
+      },
+      data: {
+        saleProductId,
+        category,
+        productName,
+        productQty,
+        totalCost,
+        costPerUnit,
+        saleDate,
+        saleTime,
+        productTypeId_fk,
+        productType,
+        productPrice,
+        discountPercentage,
+        discountPrice,
+        customerDetailsId_fk,
+      },
+    });
+
+    res.status(200).json({ message: "Sale record successfully updated" });
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 const getRecord = async (req, res) => {
@@ -135,14 +181,14 @@ const getRecord = async (req, res) => {
 };
 
 const deleteRecord = async (req, res) => {
-  const { productTypeId } = req.query;
+  const { saleProductId } = req.query;
 
-  const deleteUser = await prisma.productType.delete({
+  const saleProduct = await prisma.saleProduct.delete({
     where: {
-      productTypeId: parseInt(productTypeId),
+      saleProductId: parseInt(saleProductId),
     },
   });
   res
     .status(200)
-    .json(`record deleted sucussefully for ${productTypeId} productTypeId`);
+    .json(`record deleted sucussefully for ${saleProductId} saleProductId`);
 };
